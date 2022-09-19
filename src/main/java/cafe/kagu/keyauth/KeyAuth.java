@@ -49,7 +49,8 @@ public class KeyAuth {
 		this.version = version;
 	}
 
-	private String ownerId, appName, appSecret, version, guid, session = null;
+	private String ownerId, appName, appSecret, version, session = null;
+	private final String guid = UUID.randomUUID().toString();
 	private boolean loggedIn = false;
 	public static final String KEYAUTH_ENDPOINT = "https://keyauth.win/api/1.2/";
 	private final OkHttpClient client = new OkHttpClient();
@@ -61,9 +62,11 @@ public class KeyAuth {
 	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
 	 */
 	public void initialize(ResponseHandler onFailedInit, ResponseHandler requestError, ResponseHandler tamperedResponse) {
+		if (session != null) {
+			return;
+		}
 		
 		// Create body for request
-		guid = UUID.randomUUID().toString();
 		FormBody formBody = new FormBody.Builder().add("type", "init").add("ver", version).add("name", appName)
 				.add("ownerid", ownerId).add("enckey", guid).build();
 		
@@ -153,9 +156,9 @@ public class KeyAuth {
 			default:{
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")){
-					errorRegisteringAccount.run(json.getString("message"));
+					checkSession(requestError, tamperedResponse, errorRegisteringAccount);
 				}else {
-					loggedIn = true;
+					errorRegisteringAccount.run(json.getString("message"));
 				}
 			}break;
 		}
@@ -163,7 +166,7 @@ public class KeyAuth {
 	}
 	
 	/**
-	 * Logins into an account account for the user
+	 * Logins into an account for the user
 	 * @param username Their username
 	 * @param password Their password
 	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
@@ -195,9 +198,49 @@ public class KeyAuth {
 			default:{
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")){
-					errorLoggingIn.run(json.getString("message"));
+					checkSession(requestError, tamperedResponse, errorLoggingIn);
 				}else {
+					errorLoggingIn.run(json.getString("message"));
+				}
+			}break;
+		}
+		
+	}
+	
+	/**
+	 * Checks if the current session is that of a logged in user, is they are then it overwrites the current session used
+	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
+	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
+	 * @param errorLoggingIn ResponseHandler containing the code that runs if there is an issue while logging into the account
+	 */
+	public void checkSession(ResponseHandler requestError, ResponseHandler tamperedResponse, ResponseHandler errorLoggingIn) {
+		if (session == null) {
+			requestError.run("NotInitialized");
+			return;
+		}
+		else if (loggedIn) {
+			requestError.run("AleadyLoggedIn");
+			return;
+		}
+		
+		FormBody formBody = new FormBody.Builder().add("type", "check")
+				.add("sessionid", session).add("name", appName).add("ownerid", ownerId).build();
+		
+		String jsonStr = makeRequest(formBody);
+		switch (jsonStr) {
+			case "IOException":
+			case "NON200":{
+				requestError.run(jsonStr);
+			}break;
+			case "Tampered":{
+				tamperedResponse.run(jsonStr);
+			}break;
+			default:{
+				JSONObject json = new JSONObject(jsonStr);
+				if (json.getBoolean("success")){
 					loggedIn = true;
+				}else {
+					errorLoggingIn.run(json.getString("message"));
 				}
 			}break;
 		}
@@ -245,10 +288,22 @@ public class KeyAuth {
 		}
 
 		// Verify the response isn't tampered with
-		String hash = HashingUtils.hashHmacSha256(guid + "-" + appSecret, jsonStr);
+		String hash = HashingUtils.hashHmacSha256(appSecret + "-" + appSecret, jsonStr);
 		if (!signature.equals(hash)) {
+			System.out.println(guid + "-" + appSecret);
+			System.out.println(hash);
+			System.out.println(signature);
+			System.out.println(jsonStr);
 			return "Tampered";
 		}
+//		String hash = HashingUtils.hashHmacSha256(guid + "-" + appSecret, jsonStr);
+//		if (!signature.equals(hash)) {
+//			System.out.println(guid + "-" + appSecret);
+//			System.out.println(hash);
+//			System.out.println(signature);
+//			System.out.println(jsonStr);
+//			return "Tampered";
+//		}
 		
 		// Return
 		return jsonStr;

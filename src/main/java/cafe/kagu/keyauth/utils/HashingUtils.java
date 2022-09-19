@@ -26,6 +26,8 @@ public class HashingUtils {
 			Mac mac = Mac.getInstance("HmacSHA256");
 			SecretKeySpec secret = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
 			mac.init(secret);
+			System.out.println(mac.doFinal(data.getBytes(StandardCharsets.UTF_8)));
+			System.out.println(Hex.encodeHexString(mac.doFinal(data.getBytes(StandardCharsets.UTF_8))));
 			return Hex.encodeHexString(mac.doFinal(data.getBytes(StandardCharsets.UTF_8)));
 		} catch (Exception e) {
 			return null;
