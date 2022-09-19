@@ -50,7 +50,7 @@ public class KeyAuth {
 	}
 
 	private String ownerId, appName, appSecret, version, session = null;
-	private final String guid = UUID.randomUUID().toString();
+	private final String guid = getRandomGuid();
 	private boolean loggedIn = false;
 	public static final String KEYAUTH_ENDPOINT = "https://keyauth.win/api/1.2/";
 	private final OkHttpClient client = new OkHttpClient();
@@ -288,22 +288,10 @@ public class KeyAuth {
 		}
 
 		// Verify the response isn't tampered with
-		String hash = HashingUtils.hashHmacSha256(appSecret + "-" + appSecret, jsonStr);
+		String hash = HashingUtils.hashHmacSha256(guid + "-" + appSecret, jsonStr);
 		if (!signature.equals(hash)) {
-			System.out.println(guid + "-" + appSecret);
-			System.out.println(hash);
-			System.out.println(signature);
-			System.out.println(jsonStr);
 			return "Tampered";
 		}
-//		String hash = HashingUtils.hashHmacSha256(guid + "-" + appSecret, jsonStr);
-//		if (!signature.equals(hash)) {
-//			System.out.println(guid + "-" + appSecret);
-//			System.out.println(hash);
-//			System.out.println(signature);
-//			System.out.println(jsonStr);
-//			return "Tampered";
-//		}
 		
 		// Return
 		return jsonStr;
@@ -314,6 +302,18 @@ public class KeyAuth {
 	 */
 	public boolean isLoggedIn() {
 		return loggedIn;
+	}
+	
+	/**
+	 * Generates and returns a random guid
+	 * @return A new random guid
+	 */
+	private String getRandomGuid() {
+		String guid = UUID.randomUUID().toString();
+		if (guid.length() > 35) {
+			guid = guid.substring(0, 35);
+		}
+		return guid;
 	}
 	
 }
