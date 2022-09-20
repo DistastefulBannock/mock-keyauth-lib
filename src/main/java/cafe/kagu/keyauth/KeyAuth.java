@@ -130,8 +130,10 @@ public class KeyAuth {
 	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
 	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
 	 * @param errorRegisteringAccount A ResponseHandler containing the code that runs if there is an issue while registering an account
+	 * @param successfullyCreatedAccount A ResponseHandler containing the code that runs if the account is successfully created
 	 */
-	public void register(String username, String password, String key, ResponseHandler requestError, ResponseHandler tamperedResponse, ResponseHandler errorRegisteringAccount) {
+	public void register(String username, String password, String key, ResponseHandler requestError, ResponseHandler tamperedResponse, ResponseHandler errorRegisteringAccount,
+			ResponseHandler successfullyCreatedAccount) {
 		if (session == null) {
 			requestError.run("NotInitialized");
 			return;
@@ -157,6 +159,7 @@ public class KeyAuth {
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")){
 					checkSession(requestError, tamperedResponse, errorRegisteringAccount);
+					successfullyCreatedAccount.run(jsonStr);
 				}else {
 					errorRegisteringAccount.run(json.getString("message"));
 				}
@@ -172,8 +175,10 @@ public class KeyAuth {
 	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
 	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
 	 * @param errorLoggingIn ResponseHandler containing the code that runs if there is an issue while logging into the account
+	 * @param successfullyLoggedIn A ResponseHandler containing the code that runs if the user is successfully logged in
 	 */
-	public void login(String username, String password, ResponseHandler requestError, ResponseHandler tamperedResponse, ResponseHandler errorLoggingIn) {
+	public void login(String username, String password, ResponseHandler requestError, ResponseHandler tamperedResponse, ResponseHandler errorLoggingIn,
+			ResponseHandler successfullyLoggedIn) {
 		if (session == null) {
 			requestError.run("NotInitialized");
 			return;
@@ -199,6 +204,7 @@ public class KeyAuth {
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")){
 					checkSession(requestError, tamperedResponse, errorLoggingIn);
+					successfullyLoggedIn.run(jsonStr);
 				}else {
 					errorLoggingIn.run(json.getString("message"));
 				}
@@ -241,6 +247,40 @@ public class KeyAuth {
 					loggedIn = true;
 				}else {
 					errorLoggingIn.run(json.getString("message"));
+				}
+			}break;
+		}
+		
+	}
+	
+	/**
+	 * Checks if the current session is that of a logged in user, is they are then it overwrites the current session used
+	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
+	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
+	 * @param blacklisted ResponseHandler containing the code that runs if the user/hwid is blacklisted
+	 */
+	public void checkBlacklist(ResponseHandler requestError, ResponseHandler tamperedResponse, ResponseHandler blacklisted) {
+		if (session == null) {
+			requestError.run("NotInitialized");
+			return;
+		}
+		
+		FormBody formBody = new FormBody.Builder().add("type", "checkblacklist").add("hwid", HwidUtils.getHwid())
+				.add("sessionid", session).add("name", appName).add("ownerid", ownerId).build();
+		
+		String jsonStr = makeRequest(formBody);
+		switch (jsonStr) {
+			case "IOException":
+			case "NON200":{
+				requestError.run(jsonStr);
+			}break;
+			case "Tampered":{
+				tamperedResponse.run(jsonStr);
+			}break;
+			default:{
+				JSONObject json = new JSONObject(jsonStr);
+				if (json.getBoolean("success")){
+					blacklisted.run(json.getString("message"));
 				}
 			}break;
 		}

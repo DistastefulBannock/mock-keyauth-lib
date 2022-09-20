@@ -3,6 +3,8 @@
  */
 package cafe.kagu.keyauth;
 
+import cafe.kagu.keyauth.utils.HwidUtils;
+
 /**
  * @author lavaflowglow
  *
@@ -28,13 +30,34 @@ public class Example {
 			System.out.println("Tampered response " + msg);
 		});
 		
-		// Register new user account
-		keyAuth.register("Example", "Password", "YLCZ0P-J556P9-NERKL9-YCWAM9-C6I4U2-QXXRAV", msg -> {
+		keyAuth.checkBlacklist(msg -> {
 			System.out.println("Error " + msg);
 		}, msg -> {
-			System.out.println("Response tampered " + msg);
+			System.out.println("Tampered response " + msg);
+		}, msg -> {
+			System.out.println("Blacklisted " + msg);
+		});
+		
+		// Register new user account
+		keyAuth.register("User", "Pass", "GQQ83Q-SIZ550-K7BWT4-LJU246-N9CCHE-616VEG", msg -> {
+			System.out.println("Error " + msg);
+		}, msg -> {
+			System.out.println("Tampered response " + msg);
 		}, msg -> {
 			System.out.println("Error registering account " + msg);
+		}, msg -> {
+			System.out.println("Successfully registered account " + msg);
+		});
+		
+		// Login to an existing account
+		keyAuth.login("User", "Pass", msg -> {
+			System.out.println("Error " + msg);
+		}, msg -> {
+			System.out.println("Tampered response " + msg);
+		}, msg -> {
+			System.out.println("Error logging in " + msg);
+		}, msg -> {
+			System.out.println("Successfully logged in " + msg);
 		});
 		
 	}
