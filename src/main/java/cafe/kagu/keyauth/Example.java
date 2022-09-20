@@ -3,6 +3,8 @@
  */
 package cafe.kagu.keyauth;
 
+import java.io.File;
+
 import cafe.kagu.keyauth.utils.HwidUtils;
 
 /**
@@ -38,6 +40,17 @@ public class Example {
 			System.out.println("Blacklisted " + msg);
 		});
 		
+		try {
+			keyAuth.download("660273", new File("test.png"), msg -> {
+				System.out.println(msg);
+			}, msg -> {
+				System.out.println(msg);
+			});
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// Register new user account
 		keyAuth.register("User", "Pass", "GQQ83Q-SIZ550-K7BWT4-LJU246-N9CCHE-616VEG", msg -> {
 			System.out.println("Error " + msg);
@@ -59,6 +72,17 @@ public class Example {
 		}, msg -> {
 			System.out.println("Successfully logged in " + msg);
 		});
+		
+		try {
+			keyAuth.download("660273", new File("test.png"), msg -> {
+				System.out.println(msg);
+			}, msg -> {
+				System.out.println(msg);
+			});
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 
