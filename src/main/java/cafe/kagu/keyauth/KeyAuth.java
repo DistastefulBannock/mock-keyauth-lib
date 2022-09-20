@@ -3,6 +3,7 @@
  */
 package cafe.kagu.keyauth;
 
+import java.awt.Desktop;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -10,6 +11,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -136,7 +139,16 @@ public class KeyAuth {
 		if (json.getBoolean("success")) {
 			session = json.getString("sessionid");
 		} else {
-			onFailedInit.run(json.getString("message"));
+			if (json.getString("message").equalsIgnoreCase("invalidver")) {
+				try {
+					Desktop.getDesktop().browse(URI.create(json.getString("download")));
+				} catch (Exception e) {
+					onFailedInit.run("Failed to open update link, closing program");
+				}
+				System.exit(0);
+			}else {
+				onFailedInit.run(json.getString("message"));
+			}
 		}
 	}
 
@@ -162,10 +174,10 @@ public class KeyAuth {
 			ResponseHandler tamperedResponse, ResponseHandler errorRegisteringAccount,
 			ResponseHandler successfullyCreatedAccount) {
 		if (session == null) {
-			requestError.run("NotInitialized");
+			requestError.run("Not initialized");
 			return;
 		} else if (loggedIn) {
-			requestError.run("AleadyLoggedIn");
+			requestError.run("Aleady logged in");
 			return;
 		}
 
@@ -215,10 +227,10 @@ public class KeyAuth {
 	public void login(String username, String password, ResponseHandler requestError, ResponseHandler tamperedResponse,
 			ResponseHandler errorLoggingIn, ResponseHandler successfullyLoggedIn) {
 		if (session == null) {
-			requestError.run("NotInitialized");
+			requestError.run("Not initialized");
 			return;
 		} else if (loggedIn) {
-			requestError.run("AleadyLoggedIn");
+			requestError.run("Aleady logged in");
 			return;
 		}
 
@@ -265,10 +277,10 @@ public class KeyAuth {
 	public void checkSession(ResponseHandler requestError, ResponseHandler tamperedResponse,
 			ResponseHandler errorLoggingIn) {
 		if (session == null) {
-			requestError.run("NotInitialized");
+			requestError.run("Not initialized");
 			return;
 		} else if (loggedIn) {
-			requestError.run("AleadyLoggedIn");
+			requestError.run("Aleady logged in");
 			return;
 		}
 
@@ -300,8 +312,7 @@ public class KeyAuth {
 	}
 
 	/**
-	 * Checks if the current session is that of a logged in user, is they are then
-	 * it overwrites the current session used
+	 * Checks if the hwid or the ip of the user is blacklisted
 	 * 
 	 * @param requestError     A ResponseHandler containing the code that runs if
 	 *                         there is an error while sending the request
@@ -313,7 +324,7 @@ public class KeyAuth {
 	public void checkBlacklist(ResponseHandler requestError, ResponseHandler tamperedResponse,
 			ResponseHandler blacklisted) {
 		if (session == null) {
-			requestError.run("NotInitialized");
+			requestError.run("Not initialized");
 			return;
 		}
 
@@ -343,7 +354,7 @@ public class KeyAuth {
 	}
 
 	/**
-	 * Checks if the current session is that of a logged in user, is they are then it overwrites the current session used
+	 * Downloads a file from the file id
 	 * @param fileId The id of the file to download
 	 * @param downloadFile The file where the downloaded data should be stored
 	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
@@ -352,7 +363,7 @@ public class KeyAuth {
 	 */
 	public void download(String fileId, File downloadFile, ResponseHandler requestError, ResponseHandler tamperedResponse) throws Exception {
 		if (session == null) {
-			requestError.run("NotInitialized");
+			requestError.run("Not initialized");
 			return;
 		}
 		
@@ -384,7 +395,88 @@ public class KeyAuth {
 		}
 		
 	}
-
+	
+	/**
+	 * Bans the current logged in user, it will also blacklist their hwid and their current ip
+	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
+	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
+	 * @throws Exception Thrown when something goes wrong
+	 */
+	public void ban(ResponseHandler requestError, ResponseHandler tamperedResponse) {
+		if (session == null) {
+			requestError.run("Not initialized");
+			return;
+		} else if (!loggedIn) {
+			requestError.run("Not logged in");
+			return;
+		}
+		
+		FormBody formBody = new FormBody.Builder().add("type", "ban").add("hwid", HwidUtils.getHwid())
+				.add("sessionid", session).add("name", appName).add("ownerid", ownerId).build();
+		
+		String jsonStr = makeRequest(formBody);
+		switch (jsonStr) {
+			case "IOException":
+			case "NON200":{
+				requestError.run(jsonStr);
+			}break;
+			case "Tampered":{
+				tamperedResponse.run(jsonStr);
+			}break;
+			default:{
+				JSONObject json = new JSONObject(jsonStr);
+				if (!json.getBoolean("success")){
+					requestError.run(json.getString("message"));
+				}
+			}break;
+		}
+		
+	}
+	
+	/**
+	 * Sends a log request to the auth server
+	 * @param message The message to log
+	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
+	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
+	 * @throws Exception Thrown when something goes wrong
+	 */
+	public void log(String message, ResponseHandler requestError, ResponseHandler tamperedResponse) {
+		if (session == null) {
+			requestError.run("Not initialized");
+			return;
+		} else if (!loggedIn) {
+			requestError.run("Not logged in");
+			return;
+		}
+		
+		String pcName = null;
+		try {
+			pcName = InetAddress.getLocalHost().getHostName();
+			pcName += "-" + System.getProperty("user.name");
+		} catch (Exception e) {
+			requestError.run("Couldn't get pc name");
+			return;
+		}
+		
+		FormBody formBody = new FormBody.Builder().add("type", "log").add("pcuser", pcName).add("message", message)
+				.add("sessionid", session).add("name", appName).add("ownerid", ownerId).build();
+		
+		String jsonStr = makeRequest(formBody);
+		switch (jsonStr) {
+			case "IOException":
+			case "NON200":{
+				requestError.run(jsonStr);
+			}break;
+			case "Tampered":{
+				tamperedResponse.run(jsonStr);
+			}break;
+			default:{
+				
+			}break;
+		}
+		
+	}
+	
 	/**
 	 * Makes a request to the auth server and checks it for tampering, the
 	 * initialize method doesn't use this because the tamper check is slightly
@@ -430,7 +522,7 @@ public class KeyAuth {
 
 		// Verify the response isn't tampered with
 		String hash = HashingUtils.hashHmacSha256(guid + "-" + appSecret, jsonStr);
-		if (!signature.equals(hash)) {
+		if (!jsonStr.isEmpty() && !signature.equals(hash)) {
 			return "Tampered";
 		}
 

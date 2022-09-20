@@ -84,6 +84,18 @@ public class Example {
 			e.printStackTrace();
 		}
 		
+		keyAuth.ban(msg -> {
+			System.out.println(msg);
+		}, msg -> {
+			System.out.println(msg);
+		});
+		
+		keyAuth.log("Test log", msg -> {
+			System.out.println(msg);
+		}, msg -> {
+			System.out.println(msg);
+		});
+		
 	}
 
 }
