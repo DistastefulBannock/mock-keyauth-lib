@@ -52,7 +52,7 @@ public class Example {
 		}
 		
 		// Register new user account
-		keyAuth.register("User", "Pass", "GQQ83Q-SIZ550-K7BWT4-LJU246-N9CCHE-616VEG", msg -> {
+		keyAuth.register("Test Account", "Example Password", "e621-QVZG0-BBIIA-FTITL-ZM4QT", msg -> {
 			System.out.println("Error " + msg);
 		}, msg -> {
 			System.out.println("Tampered response " + msg);
@@ -63,7 +63,7 @@ public class Example {
 		});
 		
 		// Login to an existing account
-		keyAuth.login("User", "Pass", msg -> {
+		keyAuth.login("Test Account", "Example Password", msg -> {
 			System.out.println("Error " + msg);
 		}, msg -> {
 			System.out.println("Tampered response " + msg);
@@ -84,11 +84,11 @@ public class Example {
 			e.printStackTrace();
 		}
 		
-		keyAuth.ban(msg -> {
-			System.out.println(msg);
-		}, msg -> {
-			System.out.println(msg);
-		});
+//		keyAuth.ban(msg -> {
+//			System.out.println(msg);
+//		}, msg -> {
+//			System.out.println(msg);
+//		});
 		
 		keyAuth.log("Test log", msg -> {
 			System.out.println(msg);

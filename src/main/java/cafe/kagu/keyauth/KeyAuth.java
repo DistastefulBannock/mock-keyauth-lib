@@ -279,9 +279,6 @@ public class KeyAuth {
 		if (session == null) {
 			requestError.run("Not initialized");
 			return;
-		} else if (loggedIn) {
-			requestError.run("Aleady logged in");
-			return;
 		}
 
 		FormBody formBody = new FormBody.Builder().add("type", "check").add("sessionid", session).add("name", appName)

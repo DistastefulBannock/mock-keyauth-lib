@@ -5,6 +5,8 @@ package cafe.kagu.keyauth.utils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author DistastefulBannock
@@ -20,12 +22,10 @@ public class HwidUtils {
 		String hwid = "";
 		
 		// Gets the computer's hardware data
-		hwid += System.getProperty("user.name");
-		hwid += System.getProperty("os.name");
-		hwid += System.getenv("PROCESSOR_IDENTIFIER");
-		hwid += System.getenv("PROCESSOR_LEVEL");
-		hwid += System.getenv("COMPUTERNAME");
-		hwid += System.getenv("NUMBER_OF_PROCESSORS");
+		hwid = System.getenv("PROCESSOR_IDENTIFIER") + System.getenv("PROCESSOR_LEVEL")
+			+ System.getenv("NUMBER_OF_PROCESSORS") + System.getenv("PROCESSOR_ARCHITECTURE")
+			+ System.getProperty("line.separator") + System.getProperty("os.arch")
+			+ System.getProperty("file.encoding");
 		
 		// Removes spaces and end of line characters
 		hwid = hwid.replaceAll(" ", "").replaceAll("(\\r|\\n)", "");
