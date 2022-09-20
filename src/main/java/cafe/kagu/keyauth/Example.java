@@ -15,7 +15,7 @@ public class Example {
 
 	/**
 	 * Program entry point
-	 * @param args
+	 * @param args Program args
 	 */
 	public static void main(String[] args) {
 		

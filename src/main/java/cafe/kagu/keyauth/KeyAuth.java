@@ -397,7 +397,6 @@ public class KeyAuth {
 	 * Bans the current logged in user, it will also blacklist their hwid and their current ip
 	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
 	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
-	 * @throws Exception Thrown when something goes wrong
 	 */
 	public void ban(ResponseHandler requestError, ResponseHandler tamperedResponse) {
 		if (session == null) {
@@ -435,14 +434,10 @@ public class KeyAuth {
 	 * @param message The message to log
 	 * @param requestError A ResponseHandler containing the code that runs if there is an error while sending the request
 	 * @param tamperedResponse A ResponseHandler containing the code that runs if the response from the server is tampered with
-	 * @throws Exception Thrown when something goes wrong
 	 */
 	public void log(String message, ResponseHandler requestError, ResponseHandler tamperedResponse) {
 		if (session == null) {
 			requestError.run("Not initialized");
-			return;
-		} else if (!loggedIn) {
-			requestError.run("Not logged in");
 			return;
 		}
 		
