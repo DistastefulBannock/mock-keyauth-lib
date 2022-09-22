@@ -541,5 +541,33 @@ public class KeyAuth {
 		}
 		return guid;
 	}
-
+	
+	/**
+	 * @return the appName
+	 */
+	public String getAppName() {
+		return appName;
+	}
+	
+	/**
+	 * @return the ownerId
+	 */
+	public String getOwnerId() {
+		return ownerId;
+	}
+	
+	/**
+	 * @return the version
+	 */
+	public String getVersion() {
+		return version;
+	}
+	
+	/**
+	 * @return the session
+	 */
+	public String getSession() {
+		return session;
+	}
+	
 }

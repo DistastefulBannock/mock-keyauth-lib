@@ -3,10 +3,13 @@
  */
 package cafe.kagu.keyauth.utils;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.util.Properties;
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor.ProcessorIdentifier;
+import oshi.hardware.GraphicsCard;
+import oshi.hardware.HWDiskStore;
 
 /**
  * @author DistastefulBannock
@@ -15,25 +18,25 @@ import java.util.Properties;
 public class HwidUtils {
 	
 	/**
-	 * Taken from hummus client. fuck you I own the rights it's mine to use
 	 * @return The hwid for the current machine
 	 */
 	public static String getHwid() {
 		String hwid = "";
 		
-		// Gets the computer's hardware data
-		hwid = System.getenv("PROCESSOR_IDENTIFIER") + System.getenv("PROCESSOR_LEVEL")
-			+ System.getenv("NUMBER_OF_PROCESSORS") + System.getenv("PROCESSOR_ARCHITECTURE")
-			+ System.getProperty("line.separator") + System.getProperty("os.arch")
-			+ System.getProperty("file.encoding");
-		
-		// Removes spaces and end of line characters
-		hwid = hwid.replaceAll(" ", "").replaceAll("(\\r|\\n)", "");
+		SystemInfo systemInfo = new SystemInfo();
+		for (GraphicsCard graphicsCard : systemInfo.getHardware().getGraphicsCards()) {
+			hwid += graphicsCard.getDeviceId() + graphicsCard.getName() + graphicsCard.getVendor() + graphicsCard.getVRam();
+		}
+		for (HWDiskStore hwDiskStore : systemInfo.getHardware().getDiskStores()) {
+			hwid += hwDiskStore.getSerial();
+		}
+		ProcessorIdentifier processorIdentifier = systemInfo.getHardware().getProcessor().getProcessorIdentifier();
+		hwid += processorIdentifier.getFamily() + processorIdentifier.getIdentifier() + processorIdentifier.getVendor() + processorIdentifier.getMicroarchitecture();
 		
 		// From github somewhere
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-512");
-			md.update(hwid.getBytes());
+			md.update(hwid.getBytes(StandardCharsets.UTF_8));
 	        StringBuffer hexString = new StringBuffer();
 	        
 	        byte byteData[] = md.digest();
