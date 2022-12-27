@@ -190,12 +190,10 @@ public class KeyAuth {
 			case "IOException":
 			case "NON200": {
 				requestError.run(jsonStr);
-			}
-				break;
+			}break;
 			case "Tampered": {
 				tamperedResponse.run(jsonStr);
-			}
-				break;
+			}break;
 			default: {
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")) {
@@ -204,8 +202,7 @@ public class KeyAuth {
 				} else {
 					errorRegisteringAccount.run(json.getString("message"));
 				}
-			}
-				break;
+			}break;
 		}
 
 	}
@@ -243,12 +240,10 @@ public class KeyAuth {
 			case "IOException":
 			case "NON200": {
 				requestError.run(jsonStr);
-			}
-				break;
+			}break;
 			case "Tampered": {
 				tamperedResponse.run(jsonStr);
-			}
-				break;
+			}break;
 			default: {
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")) {
@@ -257,8 +252,7 @@ public class KeyAuth {
 				} else {
 					errorLoggingIn.run(json.getString("message"));
 				}
-			}
-				break;
+			}break;
 		}
 
 	}
@@ -289,12 +283,10 @@ public class KeyAuth {
 			case "IOException":
 			case "NON200": {
 				requestError.run(jsonStr);
-			}
-				break;
+			}break;
 			case "Tampered": {
 				tamperedResponse.run(jsonStr);
-			}
-				break;
+			}break;
 			default: {
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")) {
@@ -302,8 +294,7 @@ public class KeyAuth {
 				} else {
 					errorLoggingIn.run(json.getString("message"));
 				}
-			}
-				break;
+			}break;
 		}
 
 	}
@@ -324,7 +315,7 @@ public class KeyAuth {
 			requestError.run("Not initialized");
 			return;
 		}
-
+		
 		FormBody formBody = new FormBody.Builder().add("type", "checkblacklist").add("hwid", HwidUtils.getHwid())
 				.add("sessionid", session).add("name", appName).add("ownerid", ownerId).build();
 
@@ -333,19 +324,16 @@ public class KeyAuth {
 			case "IOException":
 			case "NON200": {
 				requestError.run(jsonStr);
-			}
-				break;
+			}break;
 			case "Tampered": {
 				tamperedResponse.run(jsonStr);
-			}
-				break;
+			}break;
 			default: {
 				JSONObject json = new JSONObject(jsonStr);
 				if (json.getBoolean("success")) {
 					blacklisted.run(json.getString("message"));
 				}
-			}
-				break;
+			}break;
 		}
 
 	}

@@ -28,6 +28,9 @@ public class HwidUtils {
 			hwid += graphicsCard.getDeviceId() + graphicsCard.getName() + graphicsCard.getVendor() + graphicsCard.getVRam();
 		}
 		for (HWDiskStore hwDiskStore : systemInfo.getHardware().getDiskStores()) {
+			if (hwDiskStore.getSize() <= 1.28e+11) {
+				continue; // Skip drive if size is less than 128gb
+			}
 			hwid += hwDiskStore.getSerial();
 		}
 		ProcessorIdentifier processorIdentifier = systemInfo.getHardware().getProcessor().getProcessorIdentifier();
